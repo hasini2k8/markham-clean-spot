@@ -70,8 +70,14 @@ function NewCleanup() {
     return data.publicUrl;
   };
 
+  const hasSpecialChars = (filename: string) => /[<>:"/\\|?*&;#'$%@!^]/.test(filename);
+
   const handleBeforeUpload = async (file: File) => {
     if (!picked || !user) return;
+    if (hasSpecialChars(file.name)) {
+      toast.error("Please rename your image. Avoid special characters like < > : \" / \\ | ? * & ; # ' $ % @ ! ^ in the filename.");
+      return;
+    }
     setBusy(true);
     try {
       const url = await uploadPhoto(file, "before");
@@ -103,6 +109,10 @@ function NewCleanup() {
 
   const handleAfterUpload = async (file: File) => {
     if (!sessionId || !startedAt) return;
+    if (hasSpecialChars(file.name)) {
+      toast.error("Please rename your image. Avoid special characters like < > : \" / \\ | ? * & ; # ' $ % @ ! ^ in the filename.");
+      return;
+    }
     setBusy(true);
     try {
       const url = await uploadPhoto(file, "after");
