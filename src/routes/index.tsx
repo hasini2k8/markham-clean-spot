@@ -1,11 +1,56 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Camera, MapPin, ClipboardCheck, Sparkles } from "lucide-react";
+import { MarkhamMap, type MapPin } from "@/components/MarkhamMap";
+import { supabase } from "@/integrations/supabase/client";
+import { Camera, MapPin as MapPinIcon, ClipboardCheck, Sparkles, Users } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: Index });
 
 function Index() {
+  const [pins, setPins] = useState<MapPin[]>([]);
+  const [resetsIn, setResetsIn] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("cleanup_sessions")
+        .select("id, lat, lng, status, location_name, reviewed_at")
+        .eq("status", "approved")
+        .gte("reviewed_at", weekAgo)
+        .order("reviewed_at", { ascending: false });
+      if (data) {
+        setPins(
+          data.map((d) => ({
+            id: d.id,
+            lat: d.lat,
+            lng: d.lng,
+            status: d.status as MapPin["status"],
+            label: d.location_name,
+          }))
+        );
+      }
+    })();
+
+    // Countdown to next Sunday midnight (rolling week reset)
+    const tick = () => {
+      const now = new Date();
+      const next = new Date(now);
+      const daysUntilSun = (7 - now.getDay()) % 7 || 7;
+      next.setDate(now.getDate() + daysUntilSun);
+      next.setHours(0, 0, 0, 0);
+      const diff = next.getTime() - now.getTime();
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      setResetsIn(`${d}d ${h}h`);
+    };
+    tick();
+    const i = setInterval(tick, 60000);
+    return () => clearInterval(i);
+  }, []);
+
   return (
     <div className="min-h-screen" style={{ background: "var(--gradient-hero)" }}>
       <Header />
@@ -26,9 +71,26 @@ function Index() {
           </div>
         </section>
 
+        <section className="mt-20">
+          <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+            <div>
+              <h2 className="font-display font-bold text-2xl sm:text-3xl flex items-center gap-2">
+                <Users className="w-6 h-6 text-accent" /> Community map
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Spots cleaned by Markham volunteers this week — {pins.length} {pins.length === 1 ? "cleanup" : "cleanups"}.
+              </p>
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-secondary/30 px-3 py-1.5 rounded-full">
+              Resets in {resetsIn}
+            </span>
+          </div>
+          <MarkhamMap pins={pins} height="420px" />
+        </section>
+
         <section className="mt-20 grid sm:grid-cols-3 gap-5">
           {[
-            { icon: MapPin, title: "1. Pick a spot", text: "Open the map of Markham and tap a location that needs care." },
+            { icon: MapPinIcon, title: "1. Pick a spot", text: "Open the map of Markham and tap a location that needs care." },
             { icon: Camera, title: "2. Clean & capture", text: "Take a before photo, start the timer, clean up, and finish with an after photo." },
             { icon: ClipboardCheck, title: "3. Get hours", text: "AI checks your work, then a supervisor approves your volunteer hours." },
           ].map((s) => (
