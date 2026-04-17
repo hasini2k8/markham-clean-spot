@@ -15,6 +15,10 @@ export const Route = createFileRoute("/cleanup/new")({ component: NewCleanup });
 
 type Step = "pick" | "before" | "in_progress" | "after" | "verify" | "done";
 
+async function fileToArrayBuffer(file: File) {
+  return await file.arrayBuffer();
+}
+
 function NewCleanup() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -45,9 +49,12 @@ function NewCleanup() {
 
   const uploadPhoto = async (file: File, kind: "before" | "after"): Promise<string> => {
     if (!user) throw new Error("not signed in");
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const path = `${user.id}/${Date.now()}-${kind}.${ext}`;
-    const { error } = await supabase.storage.from("cleanup-photos").upload(path, file, { upsert: false });
+    const { error } = await supabase.storage.from("cleanup-photos").upload(path, await fileToArrayBuffer(file), {
+      upsert: false,
+      contentType: file.type || `image/${ext}`,
+    });
     if (error) throw error;
     const { data } = supabase.storage.from("cleanup-photos").getPublicUrl(path);
     return data.publicUrl;
@@ -94,12 +101,14 @@ function NewCleanup() {
       const minutes = Math.max(1, Math.round((ended.getTime() - startedAt.getTime()) / 60000));
 
       setStep("verify");
-      // AI verify
       const { data: verifyData, error: verifyErr } = await supabase.functions.invoke("verify-cleanup", {
         body: { beforeUrl, afterUrl: url },
       });
-      if (verifyErr) throw verifyErr;
+      if (verifyErr) throw new Error(verifyErr.message || "Could not verify cleanup photos.");
       if (verifyData?.error) throw new Error(verifyData.error);
+      if (!verifyData?.verdict || !verifyData?.reasoning) {
+        throw new Error("Verification response was incomplete.");
+      }
 
       const v = { verdict: verifyData.verdict, reasoning: verifyData.reasoning };
       setVerdict(v);
