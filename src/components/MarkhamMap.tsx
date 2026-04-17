@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import L from "leaflet";
+import type LType from "leaflet";
 import { MARKHAM_BOUNDS, MARKHAM_CENTER } from "@/lib/markham";
 
 export interface MapPin {
@@ -19,55 +19,63 @@ interface Props {
 
 export function MarkhamMap({ pins = [], onPickLocation, pickedLocation, height = "500px" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const layerRef = useRef<L.LayerGroup | null>(null);
+  const mapRef = useRef<LType.Map | null>(null);
+  const layerRef = useRef<LType.LayerGroup | null>(null);
+  const LRef = useRef<typeof LType | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, {
-      center: MARKHAM_CENTER,
-      zoom: 12,
-      minZoom: 11,
-      maxZoom: 18,
-      maxBounds: MARKHAM_BOUNDS,
-      maxBoundsViscosity: 1.0,
-    });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors",
-      bounds: MARKHAM_BOUNDS,
-    }).addTo(map);
-
-    // Draw boundary
-    L.rectangle(MARKHAM_BOUNDS, {
-      color: "#4a6741",
-      weight: 2,
-      fillOpacity: 0,
-      dashArray: "6 6",
-    }).addTo(map);
-
-    layerRef.current = L.layerGroup().addTo(map);
-    mapRef.current = map;
-
-    if (onPickLocation) {
-      map.on("click", (e) => {
-        const { lat, lng } = e.latlng;
-        if (lat >= 43.8 && lat <= 43.92 && lng >= -79.4 && lng <= -79.21) {
-          onPickLocation(lat, lng);
-        }
+    let cancelled = false;
+    (async () => {
+      if (!containerRef.current || mapRef.current) return;
+      const L = (await import("leaflet")).default;
+      if (cancelled || !containerRef.current) return;
+      LRef.current = L;
+      const map = L.map(containerRef.current, {
+        center: MARKHAM_CENTER,
+        zoom: 12,
+        minZoom: 11,
+        maxZoom: 18,
+        maxBounds: MARKHAM_BOUNDS,
+        maxBoundsViscosity: 1.0,
       });
-    }
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+        bounds: MARKHAM_BOUNDS,
+      }).addTo(map);
+
+      L.rectangle(MARKHAM_BOUNDS, {
+        color: "#4a6741",
+        weight: 2,
+        fillOpacity: 0,
+        dashArray: "6 6",
+      }).addTo(map);
+
+      layerRef.current = L.layerGroup().addTo(map);
+      mapRef.current = map;
+
+      if (onPickLocation) {
+        map.on("click", (e) => {
+          const { lat, lng } = e.latlng;
+          if (lat >= 43.8 && lat <= 43.92 && lng >= -79.4 && lng <= -79.21) {
+            onPickLocation(lat, lng);
+          }
+        });
+      }
+      renderPins();
+    })();
 
     return () => {
-      map.remove();
+      cancelled = true;
+      mapRef.current?.remove();
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Render pins
-  useEffect(() => {
+  const renderPins = () => {
+    const L = LRef.current;
     const layer = layerRef.current;
-    if (!layer) return;
+    if (!L || !layer) return;
     layer.clearLayers();
     pins.forEach((p) => {
       const cls =
@@ -93,6 +101,11 @@ export function MarkhamMap({ pins = [], onPickLocation, pickedLocation, height =
       });
       L.marker([pickedLocation.lat, pickedLocation.lng], { icon }).addTo(layer);
     }
+  };
+
+  useEffect(() => {
+    renderPins();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pins, pickedLocation]);
 
   return <div ref={containerRef} style={{ height, width: "100%" }} className="rounded-2xl overflow-hidden border border-border shadow-[var(--shadow-soft)]" />;
