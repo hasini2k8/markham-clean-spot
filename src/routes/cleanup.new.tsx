@@ -57,6 +57,16 @@ function NewCleanup() {
     });
     if (error) throw error;
     const { data } = supabase.storage.from("cleanup-photos").getPublicUrl(path);
+    if (!data?.publicUrl) throw new Error("Failed to get public URL for uploaded photo");
+    console.log(`[uploadPhoto] ${kind} public URL:`, data.publicUrl);
+    try {
+      const head = await fetch(data.publicUrl, { method: "HEAD" });
+      console.log(`[uploadPhoto] ${kind} HEAD status:`, head.status, "content-type:", head.headers.get("content-type"));
+      if (!head.ok) throw new Error(`Public URL not accessible (status ${head.status})`);
+    } catch (e) {
+      console.error(`[uploadPhoto] ${kind} URL check failed:`, e);
+      throw e instanceof Error ? e : new Error("Public URL check failed");
+    }
     return data.publicUrl;
   };
 
@@ -101,6 +111,7 @@ function NewCleanup() {
       const minutes = Math.max(1, Math.round((ended.getTime() - startedAt.getTime()) / 60000));
 
       setStep("verify");
+      console.log("[verify-cleanup] invoking with:", { beforeUrl, afterUrl: url });
       const { data: verifyData, error: verifyErr } = await supabase.functions.invoke("verify-cleanup", {
         body: { beforeUrl, afterUrl: url },
       });
