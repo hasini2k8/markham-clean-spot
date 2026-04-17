@@ -14,6 +14,7 @@ import { Route as MyHoursRouteImport } from './routes/my-hours'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SupervisorLoginRouteImport } from './routes/supervisor.login'
 import { Route as CleanupNewRouteImport } from './routes/cleanup.new'
 
 const SupervisorRoute = SupervisorRouteImport.update({
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SupervisorLoginRoute = SupervisorLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => SupervisorRoute,
+} as any)
 const CleanupNewRoute = CleanupNewRouteImport.update({
   id: '/cleanup/new',
   path: '/cleanup/new',
@@ -52,16 +58,18 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/my-hours': typeof MyHoursRoute
-  '/supervisor': typeof SupervisorRoute
+  '/supervisor': typeof SupervisorRouteWithChildren
   '/cleanup/new': typeof CleanupNewRoute
+  '/supervisor/login': typeof SupervisorLoginRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/my-hours': typeof MyHoursRoute
-  '/supervisor': typeof SupervisorRoute
+  '/supervisor': typeof SupervisorRouteWithChildren
   '/cleanup/new': typeof CleanupNewRoute
+  '/supervisor/login': typeof SupervisorLoginRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,8 +77,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/my-hours': typeof MyHoursRoute
-  '/supervisor': typeof SupervisorRoute
+  '/supervisor': typeof SupervisorRouteWithChildren
   '/cleanup/new': typeof CleanupNewRoute
+  '/supervisor/login': typeof SupervisorLoginRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +90,7 @@ export interface FileRouteTypes {
     | '/my-hours'
     | '/supervisor'
     | '/cleanup/new'
+    | '/supervisor/login'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/my-hours'
     | '/supervisor'
     | '/cleanup/new'
+    | '/supervisor/login'
   id:
     | '__root__'
     | '/'
@@ -97,6 +108,7 @@ export interface FileRouteTypes {
     | '/my-hours'
     | '/supervisor'
     | '/cleanup/new'
+    | '/supervisor/login'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -104,7 +116,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
   MyHoursRoute: typeof MyHoursRoute
-  SupervisorRoute: typeof SupervisorRoute
+  SupervisorRoute: typeof SupervisorRouteWithChildren
   CleanupNewRoute: typeof CleanupNewRoute
 }
 
@@ -145,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/supervisor/login': {
+      id: '/supervisor/login'
+      path: '/login'
+      fullPath: '/supervisor/login'
+      preLoaderRoute: typeof SupervisorLoginRouteImport
+      parentRoute: typeof SupervisorRoute
+    }
     '/cleanup/new': {
       id: '/cleanup/new'
       path: '/cleanup/new'
@@ -155,14 +174,35 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface SupervisorRouteChildren {
+  SupervisorLoginRoute: typeof SupervisorLoginRoute
+}
+
+const SupervisorRouteChildren: SupervisorRouteChildren = {
+  SupervisorLoginRoute: SupervisorLoginRoute,
+}
+
+const SupervisorRouteWithChildren = SupervisorRoute._addFileChildren(
+  SupervisorRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
   MyHoursRoute: MyHoursRoute,
-  SupervisorRoute: SupervisorRoute,
+  SupervisorRoute: SupervisorRouteWithChildren,
   CleanupNewRoute: CleanupNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
