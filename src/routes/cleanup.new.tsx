@@ -111,6 +111,7 @@ function NewCleanup() {
       const minutes = Math.max(1, Math.round((ended.getTime() - startedAt.getTime()) / 60000));
 
       setStep("verify");
+      console.log("[verify-cleanup] invoking with:", { beforeUrl, afterUrl: url });
       const { data: verifyData, error: verifyErr } = await supabase.functions.invoke("verify-cleanup", {
         body: { beforeUrl, afterUrl: url },
       });
