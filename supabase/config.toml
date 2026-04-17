@@ -1,1 +1,4 @@
 project_id = "pglntayytbjmoamsqtlw"
+
+[functions.verify-cleanup]
+verify_jwt = true
