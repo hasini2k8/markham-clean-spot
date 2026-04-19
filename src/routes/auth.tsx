@@ -16,6 +16,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [affiliationType, setAffiliationType] = useState<"school" | "other">("school");
+  const [school, setSchool] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -29,15 +31,25 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const trimmedSchool = school.trim();
+        if (!trimmedSchool) {
+          toast.error(affiliationType === "school" ? "Please enter your school name." : "Please enter your organization or 'None'.");
+          setLoading(false);
+          return;
+        }
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { full_name: name },
+            data: { full_name: name, school: trimmedSchool },
           },
         });
         if (error) throw error;
+        // Persist school on profile (handle_new_user creates the row, then we update it)
+        if (signUpData.user) {
+          await supabase.from("profiles").update({ school: trimmedSchool, full_name: name }).eq("id", signUpData.user.id);
+        }
         toast.success("Account created! You can start cleaning up.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -62,10 +74,48 @@ function AuthPage() {
           </p>
           <form onSubmit={submit} className="mt-6 space-y-4">
             {mode === "signup" && (
-              <div>
-                <Label htmlFor="name">Full name</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} />
-              </div>
+              <>
+                <div>
+                  <Label htmlFor="name">Full name</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} />
+                </div>
+                <div>
+                  <Label>Are you a student?</Label>
+                  <div className="flex gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setAffiliationType("school"); setSchool(""); }}
+                      className={`flex-1 px-3 py-2 rounded-md border text-sm font-medium transition ${
+                        affiliationType === "school" ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted"
+                      }`}
+                    >
+                      Yes, I'm a student
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAffiliationType("other"); setSchool(""); }}
+                      className={`flex-1 px-3 py-2 rounded-md border text-sm font-medium transition ${
+                        affiliationType === "other" ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted"
+                      }`}
+                    >
+                      Not in school
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="school">
+                    {affiliationType === "school" ? "School name" : "Organization (or type 'None')"}
+                  </Label>
+                  <Input
+                    id="school"
+                    value={school}
+                    onChange={(e) => setSchool(e.target.value)}
+                    placeholder={affiliationType === "school" ? "e.g. Markville Secondary School" : "e.g. Markham Rotary Club, or None"}
+                    required
+                    maxLength={120}
+                  />
+                </div>
+              </>
             )}
             <div>
               <Label htmlFor="email">Email</Label>
