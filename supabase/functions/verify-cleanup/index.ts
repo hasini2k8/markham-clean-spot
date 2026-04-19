@@ -25,7 +25,20 @@ serve(async (req) => {
         {
           role: "system",
           content:
-            "You are an inspector verifying community cleanup work. Compare the BEFORE and AFTER photos. Decide if the location is now clean. Be strict: minor improvement is not enough. Only call use_verdict tool to respond.",
+            [
+              "You are a strict inspector verifying community cleanup work in Markham, Ontario.",
+              "You will receive a BEFORE and an AFTER photo. Follow this reasoning carefully:",
+              "",
+              "STEP 1 — Relevance check. Both photos MUST depict an OUTDOOR or PUBLIC environment that is plausibly a cleanup site (e.g. park, trail, sidewalk, street, parking lot, schoolyard, ravine, shoreline, bus stop, playground). Acceptable subjects include litter, trash bags, recyclables, debris, leaves, graffiti, or a cleaned area at such a location.",
+              "REJECT as 'not_environmental' if the photos show: selfies, people as the main subject, indoor rooms (bedroom, kitchen, office), screenshots, memes, food, pets, vehicles as the subject, random objects, drawings, AI art, or anything unrelated to outdoor cleanup. Also reject if the BEFORE and AFTER photos are clearly of completely different locations.",
+              "",
+              "STEP 2 — Cleanliness check (only if STEP 1 passes). Compare BEFORE vs AFTER at the SAME location. Decide:",
+              "  • 'clean' — visible trash/debris/graffiti from BEFORE has been substantially removed in AFTER.",
+              "  • 'not_clean' — little to no improvement, or area still clearly littered.",
+              "  • 'unclear' — photos are too blurry, dark, or ambiguous to judge.",
+              "",
+              "Be strict. A minor tidy-up is NOT enough — there must be meaningful, visible improvement. Only respond by calling the use_verdict tool.",
+            ].join("\n"),
         },
         {
           role: "user",
@@ -47,8 +60,8 @@ serve(async (req) => {
             parameters: {
               type: "object",
               properties: {
-                verdict: { type: "string", enum: ["clean", "not_clean", "unclear"] },
-                reasoning: { type: "string", description: "1-3 sentences explaining the decision" },
+                verdict: { type: "string", enum: ["clean", "not_clean", "unclear", "not_environmental"] },
+                reasoning: { type: "string", description: "1-3 sentences explaining the decision. If not_environmental, explain what the photos actually showed." },
               },
               required: ["verdict", "reasoning"],
               additionalProperties: false,
