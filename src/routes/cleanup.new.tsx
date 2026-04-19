@@ -134,13 +134,20 @@ function NewCleanup() {
       const v = { verdict: verifyData.verdict, reasoning: verifyData.reasoning };
       setVerdict(v);
 
+      if (v.verdict === "not_environmental") {
+        // Don't submit to supervisor — tell user to retake with proper photos
+        toast.error("Photos rejected: not a cleanup site. Please retake.");
+        setStep("done");
+        return;
+      }
+
       const { error: updErr } = await supabase
         .from("cleanup_sessions")
         .update({
           after_photo_url: url,
           ended_at: ended.toISOString(),
           duration_minutes: minutes,
-          ai_verdict: v.verdict,
+          ai_verdict: v.verdict === "clean" || v.verdict === "not_clean" || v.verdict === "unclear" ? v.verdict : null,
           ai_reasoning: v.reasoning,
           status: "pending_review",
         })
@@ -243,12 +250,17 @@ function NewCleanup() {
               <div className={`inline-flex px-4 py-1.5 rounded-full text-sm font-semibold ${
                 verdict.verdict === "clean" ? "bg-secondary/40 text-primary" :
                 verdict.verdict === "not_clean" ? "bg-destructive/15 text-destructive" :
+                verdict.verdict === "not_environmental" ? "bg-destructive/15 text-destructive" :
                 "bg-muted text-muted-foreground"
               }`}>
-                AI verdict: {verdict.verdict.replace("_", " ")}
+                AI verdict: {verdict.verdict === "not_environmental" ? "rejected — not a cleanup photo" : verdict.verdict.replace("_", " ")}
               </div>
               <p className="mt-4 text-foreground">{verdict.reasoning}</p>
-              <p className="text-sm text-muted-foreground mt-4">Submitted to a supervisor for hour approval.</p>
+              <p className="text-sm text-muted-foreground mt-4">
+                {verdict.verdict === "not_environmental"
+                  ? "This session was not submitted. Please start a new cleanup with clear before/after photos of an outdoor area."
+                  : "Submitted to a supervisor for hour approval."}
+              </p>
               <div className="grid grid-cols-2 gap-4 mt-6">
                 {beforeUrl && <div><div className="text-xs uppercase font-semibold text-muted-foreground mb-1">Before</div><img src={beforeUrl} className="rounded-lg" alt="before" /></div>}
                 {afterUrl && <div><div className="text-xs uppercase font-semibold text-muted-foreground mb-1">After</div><img src={afterUrl} className="rounded-lg" alt="after" /></div>}
