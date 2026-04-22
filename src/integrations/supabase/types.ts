@@ -125,6 +125,72 @@ export type Database = {
         }
         Relationships: []
       }
+      volunteer_forms: {
+        Row: {
+          activity_description: string
+          created_at: string
+          decline_reason: string | null
+          end_date: string | null
+          hours: number
+          id: string
+          signature_name: string | null
+          signed_at: string | null
+          signed_pdf_url: string | null
+          start_date: string | null
+          status: string
+          student_id: string
+          student_name: string
+          student_school: string | null
+          supervisor_email: string | null
+          supervisor_id: string | null
+          supervisor_name: string
+          unsigned_pdf_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_description: string
+          created_at?: string
+          decline_reason?: string | null
+          end_date?: string | null
+          hours: number
+          id?: string
+          signature_name?: string | null
+          signed_at?: string | null
+          signed_pdf_url?: string | null
+          start_date?: string | null
+          status?: string
+          student_id: string
+          student_name: string
+          student_school?: string | null
+          supervisor_email?: string | null
+          supervisor_id?: string | null
+          supervisor_name: string
+          unsigned_pdf_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_description?: string
+          created_at?: string
+          decline_reason?: string | null
+          end_date?: string | null
+          hours?: number
+          id?: string
+          signature_name?: string | null
+          signed_at?: string | null
+          signed_pdf_url?: string | null
+          start_date?: string | null
+          status?: string
+          student_id?: string
+          student_name?: string
+          student_school?: string | null
+          supervisor_email?: string | null
+          supervisor_id?: string | null
+          supervisor_name?: string
+          unsigned_pdf_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
