@@ -12,7 +12,7 @@ export function Header() {
           <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--gradient-warm)" }}>
             <Leaf className="w-5 h-5 text-primary-foreground" />
           </span>
-          <span>Markham Cleanup</span>
+          <span>MaVo</span>
         </Link>
         <nav className="flex items-center gap-2 sm:gap-3">
           {user ? (
