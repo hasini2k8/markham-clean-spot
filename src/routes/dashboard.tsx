@@ -54,7 +54,7 @@ function Dashboard() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="font-display font-bold text-3xl">Markham Cleanup Map</h1>
+            <h1 className="font-display font-bold text-3xl">MaVo Map</h1>
             <p className="text-muted-foreground text-sm mt-1">Tap any spot inside the dashed boundary to start a cleanup.</p>
           </div>
           <Link to="/cleanup/new"><Button size="lg"><Plus className="w-4 h-4 mr-2" />Start a cleanup</Button></Link>

@@ -39,7 +39,7 @@ export async function buildVolunteerFormPdf(data: VolunteerFormData): Promise<Ui
   let y = height - M;
 
   // Header
-  page.drawText("Markham Cleanup — Volunteer Hours Form", {
+  page.drawText("MaVo — Volunteer Hours Form", {
     x: M, y, size: 18, font: bold, color: rgb(0.1, 0.35, 0.15),
   });
   y -= 26;
@@ -92,7 +92,7 @@ export async function buildVolunteerFormPdf(data: VolunteerFormData): Promise<Ui
 
   page.drawText(
     data.signatureName
-      ? "✓ Digitally signed via Markham Cleanup app"
+      ? "✓ Digitally signed via MaVo app"
       : "Awaiting supervisor signature",
     { x: M, y: 60, size: 9, font, color: rgb(0.5, 0.5, 0.5) }
   );

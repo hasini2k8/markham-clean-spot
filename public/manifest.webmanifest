@@ -1,7 +1,7 @@
 {
-  "name": "Markham Cleanup",
-  "short_name": "Cleanup",
-  "description": "Join Markham residents cleaning up the city. Log hours, get supervisor approval, AI-verified cleanups.",
+  "name": "MaVo",
+  "short_name": "MaVo",
+  "description": "Join MaVo to clean up your community. Log hours, get supervisor approval, AI-verified cleanups.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
