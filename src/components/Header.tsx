@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Leaf, LogOut, Shield } from "lucide-react";
+import { Leaf, LogOut, Shield, FileText } from "lucide-react";
 
 export function Header() {
   const { user, isSupervisor, signOut } = useAuth();
@@ -19,10 +19,18 @@ export function Header() {
             <>
               <Link to="/dashboard" className="text-sm font-medium text-foreground/80 hover:text-primary px-3 py-2">Map</Link>
               <Link to="/my-hours" className="text-sm font-medium text-foreground/80 hover:text-primary px-3 py-2 hidden sm:inline">My Hours</Link>
+              <Link to="/forms" className="text-sm font-medium text-foreground/80 hover:text-primary px-3 py-2 hidden sm:inline-flex items-center gap-1">
+                <FileText className="w-4 h-4" /> Forms
+              </Link>
               {isSupervisor && (
-                <Link to="/supervisor" className="text-sm font-medium text-accent hover:opacity-80 px-3 py-2 flex items-center gap-1">
-                  <Shield className="w-4 h-4" /> Review
-                </Link>
+                <>
+                  <Link to="/supervisor" className="text-sm font-medium text-accent hover:opacity-80 px-3 py-2 flex items-center gap-1">
+                    <Shield className="w-4 h-4" /> Review
+                  </Link>
+                  <Link to="/supervisor/forms" className="text-sm font-medium text-accent hover:opacity-80 px-3 py-2 hidden sm:inline-flex items-center gap-1">
+                    <FileText className="w-4 h-4" /> Sign
+                  </Link>
+                </>
               )}
               <Button variant="ghost" size="sm" onClick={() => signOut()}>
                 <LogOut className="w-4 h-4" />
