@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Shield, Check, X } from "lucide-react";
+import { Shield, Check, X, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/supervisor")({ component: Supervisor });
 
@@ -24,12 +24,21 @@ interface Pending {
   status: string;
 }
 
+interface VolunteerTotal {
+  volunteer_id: string;
+  name: string;
+  minutes: number;
+}
+
+const displayDate = (value: string) => new Date(value).toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" });
+
 function Supervisor() {
   const { user, loading, isSupervisor } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState<Pending[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [names, setNames] = useState<Record<string, string>>({});
+  const [totals, setTotals] = useState<VolunteerTotal[]>([]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -42,16 +51,23 @@ function Supervisor() {
       .select("id,location_name,started_at,duration_minutes,ai_verdict,ai_reasoning,before_photo_url,after_photo_url,volunteer_id,status")
       .eq("status", "pending_review")
       .order("started_at", { ascending: true });
+    const { data: approved } = await supabase
+      .from("cleanup_sessions")
+      .select("volunteer_id,duration_minutes")
+      .eq("status", "approved");
+    const allIds = Array.from(new Set([...(data ?? []).map((d) => d.volunteer_id), ...(approved ?? []).map((d) => d.volunteer_id)]));
+    const map: Record<string, string> = {};
+    if (allIds.length) {
+      const { data: profs } = await supabase.from("profiles").select("id,full_name,email").in("id", allIds);
+      profs?.forEach((p) => (map[p.id] = p.full_name || p.email || "Volunteer"));
+      setNames(map);
+    }
     if (data) {
       setItems(data as Pending[]);
-      const ids = Array.from(new Set(data.map((d) => d.volunteer_id)));
-      if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id,full_name,email").in("id", ids);
-        const map: Record<string, string> = {};
-        profs?.forEach((p) => (map[p.id] = p.full_name || p.email || "Volunteer"));
-        setNames(map);
-      }
     }
+    const summary = new Map<string, number>();
+    (approved ?? []).forEach((row) => summary.set(row.volunteer_id, (summary.get(row.volunteer_id) ?? 0) + (row.duration_minutes ?? 0)));
+    setTotals(Array.from(summary.entries()).map(([volunteer_id, minutes]) => ({ volunteer_id, minutes, name: map[volunteer_id] ?? "Volunteer" })).sort((a, b) => b.minutes - a.minutes));
   };
 
   useEffect(() => { if (isSupervisor) load(); }, [isSupervisor]);
