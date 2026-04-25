@@ -32,6 +32,8 @@ interface Form {
   created_at: string;
 }
 
+const displayDate = (value: string) => new Date(value).toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" });
+
 function SupervisorForms() {
   const { user, loading, isSupervisor } = useAuth();
   const navigate = useNavigate();
@@ -46,12 +48,12 @@ function SupervisorForms() {
   }, [user, loading, isSupervisor, navigate]);
 
   const load = async () => {
+    if (!user) return;
     const { data } = await supabase
       .from("volunteer_forms")
       .select("*")
-      .or(`supervisor_id.eq.${user!.id},supervisor_id.is.null`)
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
+      .or(`supervisor_id.eq.${user.id},supervisor_email.eq.${user.email ?? ""}`)
+      .order("created_at", { ascending: false });
     setItems((data ?? []) as Form[]);
   };
 
@@ -136,20 +138,20 @@ function SupervisorForms() {
             </span>
             <div>
               <h1 className="font-display font-bold text-3xl">Forms to sign</h1>
-              <p className="text-sm text-muted-foreground">{items.length} pending form{items.length !== 1 ? "s" : ""}</p>
+              <p className="text-sm text-muted-foreground">{items.length} form{items.length !== 1 ? "s" : ""} sent to you</p>
             </div>
           </div>
           <Link to="/supervisor" className="text-sm text-muted-foreground hover:text-primary">← Back to reviews</Link>
         </div>
 
         <div className="mt-6 space-y-4">
-          {items.length === 0 && <p className="text-muted-foreground text-center py-12">No forms waiting.</p>}
+          {items.length === 0 && <p className="text-muted-foreground text-center py-12">No forms sent to you yet.</p>}
           {items.map((f) => (
             <Card key={f.id} className="p-6">
               <div className="flex justify-between gap-3 flex-wrap">
                 <div>
                   <div className="font-display font-bold text-lg">{f.student_name}</div>
-                  <div className="text-sm text-muted-foreground">{f.student_school || "—"} • {new Date(f.created_at).toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">{f.student_school || "—"} • {displayDate(f.created_at)}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-display font-bold text-primary tabular-nums">{f.hours} hrs</div>
@@ -165,7 +167,13 @@ function SupervisorForms() {
                 </a>
               )}
 
-              <div className="mt-4 border-t pt-4 space-y-3">
+              {f.status !== "pending" && (
+                <div className="mt-4 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+                  Status: <span className="font-semibold text-foreground">{f.status}</span>{f.signed_at ? ` on ${displayDate(f.signed_at)}` : ""}
+                </div>
+              )}
+
+              {f.status === "pending" && <div className="mt-4 border-t pt-4 space-y-3">
                 <div>
                   <label className="text-xs uppercase font-semibold text-muted-foreground">Type your full name to sign</label>
                   <Input
@@ -192,7 +200,7 @@ function SupervisorForms() {
                     <PenLine className="w-4 h-4 mr-1" />{busy === f.id ? "Signing…" : "Sign & return"}
                   </Button>
                 </div>
-              </div>
+              </div>}
             </Card>
           ))}
         </div>

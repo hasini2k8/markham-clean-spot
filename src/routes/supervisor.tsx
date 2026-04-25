@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Shield, Check, X } from "lucide-react";
+import { Shield, Check, X, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/supervisor")({ component: Supervisor });
 
@@ -24,12 +24,21 @@ interface Pending {
   status: string;
 }
 
+interface VolunteerTotal {
+  volunteer_id: string;
+  name: string;
+  minutes: number;
+}
+
+const displayDate = (value: string) => new Date(value).toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" });
+
 function Supervisor() {
   const { user, loading, isSupervisor } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState<Pending[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [names, setNames] = useState<Record<string, string>>({});
+  const [totals, setTotals] = useState<VolunteerTotal[]>([]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -42,16 +51,23 @@ function Supervisor() {
       .select("id,location_name,started_at,duration_minutes,ai_verdict,ai_reasoning,before_photo_url,after_photo_url,volunteer_id,status")
       .eq("status", "pending_review")
       .order("started_at", { ascending: true });
+    const { data: approved } = await supabase
+      .from("cleanup_sessions")
+      .select("volunteer_id,duration_minutes")
+      .eq("status", "approved");
+    const allIds = Array.from(new Set([...(data ?? []).map((d) => d.volunteer_id), ...(approved ?? []).map((d) => d.volunteer_id)]));
+    const map: Record<string, string> = {};
+    if (allIds.length) {
+      const { data: profs } = await supabase.from("profiles").select("id,full_name,email").in("id", allIds);
+      profs?.forEach((p) => (map[p.id] = p.full_name || p.email || "Volunteer"));
+      setNames(map);
+    }
     if (data) {
       setItems(data as Pending[]);
-      const ids = Array.from(new Set(data.map((d) => d.volunteer_id)));
-      if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id,full_name,email").in("id", ids);
-        const map: Record<string, string> = {};
-        profs?.forEach((p) => (map[p.id] = p.full_name || p.email || "Volunteer"));
-        setNames(map);
-      }
     }
+    const summary = new Map<string, number>();
+    (approved ?? []).forEach((row) => summary.set(row.volunteer_id, (summary.get(row.volunteer_id) ?? 0) + (row.duration_minutes ?? 0)));
+    setTotals(Array.from(summary.entries()).map(([volunteer_id, minutes]) => ({ volunteer_id, minutes, name: map[volunteer_id] ?? "Volunteer" })).sort((a, b) => b.minutes - a.minutes));
   };
 
   useEffect(() => { if (isSupervisor) load(); }, [isSupervisor]);
@@ -87,6 +103,24 @@ function Supervisor() {
           </div>
         </div>
 
+        <section className="mt-6">
+          <Card className="p-6">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              <h2 className="font-display font-bold text-xl">Volunteer hours completed</h2>
+            </div>
+            <div className="mt-4 divide-y divide-border">
+              {totals.length === 0 && <p className="text-sm text-muted-foreground py-4">No approved volunteer hours yet.</p>}
+              {totals.map((v) => (
+                <div key={v.volunteer_id} className="flex items-center justify-between gap-4 py-3">
+                  <span className="font-medium">{v.name}</span>
+                  <span className="font-display font-bold text-primary tabular-nums">{(v.minutes / 60).toFixed(1)} h</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </section>
+
         <div className="mt-6 space-y-4">
           {items.length === 0 && <p className="text-muted-foreground text-center py-12">All caught up — no pending reviews.</p>}
           {items.map((s) => (
@@ -94,7 +128,7 @@ function Supervisor() {
               <div className="flex flex-wrap justify-between gap-3">
                 <div>
                   <div className="font-display font-bold text-lg">{s.location_name}</div>
-                  <div className="text-sm text-muted-foreground">By {names[s.volunteer_id] ?? "Volunteer"} • {new Date(s.started_at).toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">By {names[s.volunteer_id] ?? "Volunteer"} • {displayDate(s.started_at)}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-display font-bold text-primary tabular-nums">{s.duration_minutes ?? 0} min</div>
