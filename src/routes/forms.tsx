@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
@@ -25,6 +25,7 @@ interface Form {
 function MyForms() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [forms, setForms] = useState<Form[]>([]);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ function MyForms() {
   }, [user]);
 
   if (!user) return null;
+  if (location.pathname !== "/forms") return <Outlet />;
 
   return (
     <div className="min-h-screen bg-background">
