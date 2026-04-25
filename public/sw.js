@@ -1,5 +1,5 @@
 // Minimal service worker for PWA installability + basic offline shell
-const CACHE = "markham-cleanup-v1";
+const CACHE = "mavo-v2";
 const ASSETS = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {
