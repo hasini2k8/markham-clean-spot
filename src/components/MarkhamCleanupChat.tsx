@@ -35,7 +35,7 @@ export function MarkhamCleanupChat() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed right-4 top-24 z-50 flex flex-col items-end">
       {open && (
         <div className="mb-3 w-[min(calc(100vw-2rem),22rem)] overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-warm)]">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
