@@ -59,7 +59,9 @@ function MyForms() {
               <p className="text-sm text-muted-foreground">Volunteer hour forms sent to supervisors.</p>
             </div>
           </div>
-          <Link to="/forms/new"><Button><Plus className="w-4 h-4 mr-1" />New form</Button></Link>
+          <Button asChild>
+            <Link to="/forms/new"><Plus className="w-4 h-4 mr-1" />New form</Link>
+          </Button>
         </div>
 
         <div className="mt-6 space-y-3">
