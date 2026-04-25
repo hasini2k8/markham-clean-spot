@@ -103,6 +103,24 @@ function Supervisor() {
           </div>
         </div>
 
+        <section className="mt-6">
+          <Card className="p-6">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              <h2 className="font-display font-bold text-xl">Volunteer hours completed</h2>
+            </div>
+            <div className="mt-4 divide-y divide-border">
+              {totals.length === 0 && <p className="text-sm text-muted-foreground py-4">No approved volunteer hours yet.</p>}
+              {totals.map((v) => (
+                <div key={v.volunteer_id} className="flex items-center justify-between gap-4 py-3">
+                  <span className="font-medium">{v.name}</span>
+                  <span className="font-display font-bold text-primary tabular-nums">{(v.minutes / 60).toFixed(1)} h</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </section>
+
         <div className="mt-6 space-y-4">
           {items.length === 0 && <p className="text-muted-foreground text-center py-12">All caught up — no pending reviews.</p>}
           {items.map((s) => (
@@ -110,7 +128,7 @@ function Supervisor() {
               <div className="flex flex-wrap justify-between gap-3">
                 <div>
                   <div className="font-display font-bold text-lg">{s.location_name}</div>
-                  <div className="text-sm text-muted-foreground">By {names[s.volunteer_id] ?? "Volunteer"} • {new Date(s.started_at).toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">By {names[s.volunteer_id] ?? "Volunteer"} • {displayDate(s.started_at)}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-display font-bold text-primary tabular-nums">{s.duration_minutes ?? 0} min</div>
