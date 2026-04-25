@@ -19,6 +19,7 @@ import { Route as SupervisorLoginRouteImport } from './routes/supervisor.login'
 import { Route as SupervisorFormsRouteImport } from './routes/supervisor.forms'
 import { Route as FormsNewRouteImport } from './routes/forms.new'
 import { Route as CleanupNewRouteImport } from './routes/cleanup.new'
+import { Route as ApiPublicMarkhamCleanupChatRouteImport } from './routes/api.public.markham-cleanup-chat'
 
 const SupervisorRoute = SupervisorRouteImport.update({
   id: '/supervisor',
@@ -70,6 +71,12 @@ const CleanupNewRoute = CleanupNewRouteImport.update({
   path: '/cleanup/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMarkhamCleanupChatRoute =
+  ApiPublicMarkhamCleanupChatRouteImport.update({
+    id: '/api/public/markham-cleanup-chat',
+    path: '/api/public/markham-cleanup-chat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/forms/new': typeof FormsNewRoute
   '/supervisor/forms': typeof SupervisorFormsRoute
   '/supervisor/login': typeof SupervisorLoginRoute
+  '/api/public/markham-cleanup-chat': typeof ApiPublicMarkhamCleanupChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesByTo {
   '/forms/new': typeof FormsNewRoute
   '/supervisor/forms': typeof SupervisorFormsRoute
   '/supervisor/login': typeof SupervisorLoginRoute
+  '/api/public/markham-cleanup-chat': typeof ApiPublicMarkhamCleanupChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +116,7 @@ export interface FileRoutesById {
   '/forms/new': typeof FormsNewRoute
   '/supervisor/forms': typeof SupervisorFormsRoute
   '/supervisor/login': typeof SupervisorLoginRoute
+  '/api/public/markham-cleanup-chat': typeof ApiPublicMarkhamCleanupChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/forms/new'
     | '/supervisor/forms'
     | '/supervisor/login'
+    | '/api/public/markham-cleanup-chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/forms/new'
     | '/supervisor/forms'
     | '/supervisor/login'
+    | '/api/public/markham-cleanup-chat'
   id:
     | '__root__'
     | '/'
@@ -145,6 +157,7 @@ export interface FileRouteTypes {
     | '/forms/new'
     | '/supervisor/forms'
     | '/supervisor/login'
+    | '/api/public/markham-cleanup-chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,6 +168,7 @@ export interface RootRouteChildren {
   MyHoursRoute: typeof MyHoursRoute
   SupervisorRoute: typeof SupervisorRouteWithChildren
   CleanupNewRoute: typeof CleanupNewRoute
+  ApiPublicMarkhamCleanupChatRoute: typeof ApiPublicMarkhamCleanupChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -229,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CleanupNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/markham-cleanup-chat': {
+      id: '/api/public/markham-cleanup-chat'
+      path: '/api/public/markham-cleanup-chat'
+      fullPath: '/api/public/markham-cleanup-chat'
+      preLoaderRoute: typeof ApiPublicMarkhamCleanupChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -264,7 +285,17 @@ const rootRouteChildren: RootRouteChildren = {
   MyHoursRoute: MyHoursRoute,
   SupervisorRoute: SupervisorRouteWithChildren,
   CleanupNewRoute: CleanupNewRoute,
+  ApiPublicMarkhamCleanupChatRoute: ApiPublicMarkhamCleanupChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
