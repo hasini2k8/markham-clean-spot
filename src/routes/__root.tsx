@@ -2,6 +2,7 @@ import { Outlet, createRootRoute, HeadContent, Scripts } from "@tanstack/react-r
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth";
+import { MarkhamCleanupChat } from "@/components/MarkhamCleanupChat";
 
 import appCss from "../styles.css?url";
 
@@ -65,6 +66,7 @@ function RootComponent() {
   return (
     <AuthProvider>
       <Outlet />
+      <MarkhamCleanupChat />
       <Toaster richColors position="top-center" />
     </AuthProvider>
   );
