@@ -18,10 +18,14 @@ export function Header() {
           {user ? (
             <>
               <Link to="/dashboard" className="text-sm font-medium text-foreground/80 hover:text-primary px-3 py-2">Map</Link>
-              <Link to="/my-hours" className="text-sm font-medium text-foreground/80 hover:text-primary px-3 py-2 hidden sm:inline">My Hours</Link>
-              <Link to="/forms" className="text-sm font-medium text-foreground/80 hover:text-primary px-3 py-2 hidden sm:inline-flex items-center gap-1">
-                <FileText className="w-4 h-4" /> Forms
-              </Link>
+              {!isSupervisor && (
+                <>
+                  <Link to="/my-hours" className="text-sm font-medium text-foreground/80 hover:text-primary px-3 py-2 hidden sm:inline">My Hours</Link>
+                  <Link to="/forms" className="text-sm font-medium text-foreground/80 hover:text-primary px-3 py-2 hidden sm:inline-flex items-center gap-1">
+                    <FileText className="w-4 h-4" /> Forms
+                  </Link>
+                </>
+              )}
               {isSupervisor && (
                 <>
                   <Link to="/supervisor" className="text-sm font-medium text-accent hover:opacity-80 px-3 py-2 flex items-center gap-1">
