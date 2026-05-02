@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { getAuthRedirectUrl } from "@/lib/platform";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
