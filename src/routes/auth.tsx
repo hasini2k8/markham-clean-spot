@@ -42,7 +42,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: getAuthRedirectUrl("/dashboard"),
             data: { full_name: name, school: trimmedSchool },
           },
         });
